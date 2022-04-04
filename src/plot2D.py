@@ -65,18 +65,26 @@ def subplotSmooth2D(ax,x,y,Z,fplot='contourf',xmin=None,xmax=None,nx=50,nlev=50,
     if vmin is not None and vmax is not None:
         levels = np.linspace(vmin,vmax,nlev+1)
     
-    # set new x plotting range and interpolate Z onto it
-    x_new = x.copy()
-    Z_new = Z.copy()
+    # only keep x_values where Z is not a nan
+    notanan_x = np.any(~np.isnan(Z)&np.isfinite(Z),axis=0)
+    notanan2d = np.vstack([notanan_x[None,:]]*Z.shape[0])
+    x_valid = x[notanan_x]
+    y_valid = y
+    Nx,Ny = len(x_valid), len(y_valid)
+    Z_valid=Z[notanan2d].reshape(Ny,Nx)
+
     if xmin is not None and xmax is not None:
         x_new = np.linspace(xmin,xmax,nx+1)
-        f_interp = interp2d(x,y,Z,kind='cubic')
-        Z_new = f_interp(x_new,y)
-    X,Y = np.meshgrid(x_new,y)
-    
+        f_interp = interp2d(x_valid,y_valid,Z_valid,kind='cubic')
+        Z_new = f_interp(x_new,y_valid)
+    # else:
+    #     x_new = x_valid
+    X,Y = np.meshgrid(x_new,y_valid)
+
+
     # remove values outside xrange
-    X_out = np.logical_or(X < np.min(x),X > np.max(x))
+    X_out = np.logical_or(X < np.nanmin(x_valid),X > np.nanmax(x_valid))
     Z_new[X_out] = np.nan
-    
+
     # plot
     return getattr(ax,fplot)(X,Y,Z_new,levels=levels,**kwargs)
