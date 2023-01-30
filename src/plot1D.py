@@ -52,9 +52,10 @@ def setXaxisIL(ax,ranks):
     ax.xaxis.set_ticks_position('bottom')
 
     # set xticks
-    xtick_pos = np.mod(np.log10(np.round(x,5)),1) == 0
+    xtick_pos = np.mod(np.round(np.log10(x),7),1) == 0
     xticks = x[xtick_pos]
-    xticklabels = np.array(ranks[xtick_pos],dtype=str)
+    ks = np.round(np.log10(xticks]),7)
+    xticklabels = np.array([("%%2.%1df"%max(0,k-2))%((1-10**(-k))*100) for k in np.flipud(ks)])
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels)
     
@@ -73,22 +74,30 @@ def setYaxisIL(ax,ranks):
     ax.yaxis.set_ticks_position('left')
 
     # set xticks
-    ytick_pos = np.mod(np.log10(np.round(y,5)),1) == 0
+    ytick_pos = np.mod(np.log10(np.round(y,7)),1) == 0
     yticks = y[ytick_pos]
-    yticklabels = np.array(ranks[ytick_pos],dtype=str)
+    ks = np.round(np.log10(yticks),7)    
+    yticklabels = np.array([("%%2.%1df"%max(0,k-2))%((1-10**(-k))*100) for k in np.flipud(ks)])
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels)
     
-def showData(ax,ranks,values,axisIL='x',**kwargs):
+def showData(ax,ranks,values,axisIL='x',rankmin=None,rankmax=None,**kwargs):
     """Show data as it is, regardless of preset frame and ticks"""
 
     if axisIL == 'x':
         
         x = 1/(1-ranks/100.)
+        xmin = xmax = None
+        if rankmin is not None:
+            xmin = 1/(1-rankmin/100.)
+        if rankmax is not None:
+            xmax = 1/(1-rankmax/100.)
         # show
         h = ax.plot(x,values,**kwargs)
         # be careful that the x bounds are precisely the same as the background frame
         ax.margins(x=0)
+        # bounds
+        ax.set_xlim(xmin,xmax)
         # log
         ax.set_xscale ('log')
         # remove ticks
@@ -100,10 +109,16 @@ def showData(ax,ranks,values,axisIL='x',**kwargs):
     elif axisIL == 'y':
         
         y = 1/(1-ranks/100.)
+        if rankmin is not None:
+            ymin = 1/(1-rankmin/100.)
+        if rankmax is not None:
+            ymax = 1/(1-rankmax/100.)
         # show
         h = ax.plot(values,y,**kwargs)
         # be careful that the y bounds are precisely the same as the background frame
         ax.margins(y=0)
+        # bounds
+        ax.set_ylim(ymin,ymax)
         # log
         ax.set_yscale ('log')
         # remove ticks
@@ -111,7 +126,7 @@ def showData(ax,ranks,values,axisIL='x',**kwargs):
         ax.set_yticks([], minor=True)
 
         return h
-        return h
+
 
 def subplotRanksILog(ax,ranks,y,sl=slice(None,None),col=None,ltype=None,linewidth=None,alpha=None,
     labels=None,renameX=True,offset=0):
