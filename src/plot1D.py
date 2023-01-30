@@ -54,7 +54,7 @@ def setXaxisIL(ax,ranks):
     # set xticks
     xtick_pos = np.mod(np.round(np.log10(x),7),1) == 0
     xticks = x[xtick_pos]
-    ks = np.round(np.log10(xticks]),7)
+    ks = np.round(np.log10(xticks),7)
     xticklabels = np.array([("%%2.%1df"%max(0,k-2))%((1-10**(-k))*100) for k in np.flipud(ks)])
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels)
@@ -81,7 +81,7 @@ def setYaxisIL(ax,ranks):
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels)
     
-def showData(ax,ranks,values,axisIL='x',rankmin=None,rankmax=None,**kwargs):
+def showData(ax,ranks,values,axisIL='x',rankmin=0,rankmax=99.99,**kwargs):
     """Show data as it is, regardless of preset frame and ticks"""
 
     if axisIL == 'x':
