@@ -157,7 +157,7 @@ def subplotRanksILog(ax,ranks,y,sl=slice(None,None),rankmin=0,rankmax=99.999,set
     axes given in argument to display curve"""
     
     #- set frame
-    ax_frame = _
+    ax_frame = None
     if setframe:
         ax_frame = setFrame(ax,rankmin=rankmin,rankmax=rankmax)
         
