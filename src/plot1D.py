@@ -58,6 +58,8 @@ def setXaxisIL(ax,ranks):
     xticklabels = np.array([("%%2.%1df"%max(0,k-2))%((1-10**(-k))*100) for k in np.flipud(ks)])
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels)
+    # set labelpad
+    # ax.set_xlabel(labelpad=4.0)
     
 def setYaxisIL(ax,ranks):
     
@@ -80,6 +82,26 @@ def setYaxisIL(ax,ranks):
     yticklabels = np.array([("%%2.%1df"%max(0,k-2))%((1-10**(-k))*100) for k in np.flipud(ks)])
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels)
+
+def setFrame(ax,rankmin=0,rankmax=99.99,axisIL='x'):
+    
+    #- duplicate axes for rescaling frame
+    ax_frame = ax.twiny()
+    
+    # set ranks
+    k_min = -np.round(log10(1-rankmin/100))
+    k_max = -np.round(log10(1-rankmax/100))
+    dk = 0.1
+    scale_invlog = np.arange(k_min,k_max+dk,dk)
+    ranks_frame = (1 - np.power(10,-scale_invlog))*100
+    
+    #- set axis
+    if axisIL == 'x':
+        setXaxisIL(ax_frame,ranks_frame)
+    elif axisIL == 'y':
+        setXaxisIL(ax_frame,ranks_frame)
+        
+    return ax_frame
     
 def showData(ax,ranks,values,axisIL='x',rankmin=0,rankmax=99.99,**kwargs):
     """Show data as it is, regardless of preset frame and ticks"""
@@ -128,20 +150,18 @@ def showData(ax,ranks,values,axisIL='x',rankmin=0,rankmax=99.99,**kwargs):
         return h
 
 
-def subplotRanksILog(ax,ranks,y,sl=slice(None,None),col=None,ltype=None,linewidth=None,alpha=None,
-    labels=None,renameX=True,offset=0):
-    """RECODE THAT ONE to combine steps"""
-    
-    #- duplicate axes for rescaling frame
-    ax_frame = ax.twiny()
+def subplotRanksILog(ax,ranks,y,sl=slice(None,None),rankmin=0,rankmax=99.999,setframe=True,\
+                     col=None,ltype=None,linewidth=None,alpha=None,labels=None,offset=0):
+    """Display one or several curves on inverse=logarithmic axis.
+    To allow successive use of this method, set frame based on rankmin and rankmax, duplicate axis for frame, and use
+    axes given in argument to display curve"""
     
     #- set frame
-    setXaxisIL(ax_frame,ranks)
-    
+    ax_frame = _
+    if setframe:
+        ax_frame = setFrame(ax,rankmin=rankmin,rankmax=rankmax)
+        
     #- show data
-    showData(ax,ranks,y,axisIL='x')
-    
-    # plot
     if isinstance(y,list):
         for i in range(len(y)):
             lab = None
@@ -149,11 +169,13 @@ def subplotRanksILog(ax,ranks,y,sl=slice(None,None),col=None,ltype=None,linewidt
                 lab = labels[i]
             lt = ltype[i] if ltype is not None else '-'
             a = alpha[i] if alpha is not None else 1
-            c = col[i] if col is not None else 1
+            c = col[i] if col is not None else 'k'
             lw = linewidth[i] if linewidth is not None else 1.5
-            showData(ax,ranks,y,axisIL='x',c=c,alpha=a,linestyle=lt,linewidth=lw,label=lab)
+            showData(ax,ranks[i],y[i],axisIL='x',rankmin=rankmin,rankmax=rankmax,c=c,alpha=a,linestyle=lt,linewidth=lw,label=lab)
     else:
-        showData(ax,ranks,y,axisIL='x',c=col,alpha=alpha,linestyle=ltype,linewidth=linewidth,label=labels)
+        showData(ax,ranks,y,axisIL='x',rankmin=rankmin,rankmax=rankmax,c=col,alpha=alpha,linestyle=ltype,linewidth=linewidth,label=labels)
+
+    return ax_frame
 
 
 def addXHatch(ax,ranks,i_xlim,color='gray',hatch='//',
