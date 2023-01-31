@@ -162,6 +162,9 @@ def subplotRanksILog(ax,ranks,y,sl=slice(None,None),rankmin=0,rankmax=99.999,set
         ax_frame = setFrame(ax,rankmin=rankmin,rankmax=rankmax)
         
     #- show data
+    # init handle list
+    h_all = []
+    # show
     if isinstance(y,list):
         for i in range(len(y)):
             lab = None
@@ -171,11 +174,12 @@ def subplotRanksILog(ax,ranks,y,sl=slice(None,None),rankmin=0,rankmax=99.999,set
             a = alpha[i] if alpha is not None else 1
             c = col[i] if col is not None else 'k'
             lw = linewidth[i] if linewidth is not None else 1.5
-            showData(ax,ranks[i],y[i],axisIL='x',rankmin=rankmin,rankmax=rankmax,c=c,alpha=a,linestyle=lt,linewidth=lw,label=lab)
+            h = showData(ax,ranks[i],y[i],axisIL='x',rankmin=rankmin,rankmax=rankmax,c=c,alpha=a,linestyle=lt,linewidth=lw,label=lab)
+            h_all.append(h)
     else:
-        showData(ax,ranks,y,axisIL='x',rankmin=rankmin,rankmax=rankmax,c=col,alpha=alpha,linestyle=ltype,linewidth=linewidth,label=labels)
+        h_all = showData(ax,ranks,y,axisIL='x',rankmin=rankmin,rankmax=rankmax,c=col,alpha=alpha,linestyle=ltype,linewidth=linewidth,label=labels)
 
-    return ax_frame
+    return ax_frame, h_all
 
 
 def addXHatch(ax,ranks,i_xlim,color='gray',hatch='//',
