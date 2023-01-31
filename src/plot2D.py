@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jan 31 17:05:02 2023
+
+Module plot2D
+
+Includes functions to 
+
+- plot vertical profiles on transformed x axis or profiles conditioned on x variables
+- plot joint histograms on inverse-logarithmic axes (extremes)
+
+@author: bfildier
+"""
+
+#---- Modules ----#
 
 from scipy.interpolate import griddata,interp2d
 import numpy as np
@@ -37,6 +53,12 @@ from matplotlib import colors
 #     if y[0] > y[-1]:
 #         plt.gca().invert_yaxis()
 
+
+
+#---- Functions ----#
+
+
+#---- Transect or transformed x coordinate
 
 # set the colormap and centre the colorbar
 class MidpointNormalize(colors.Normalize):
@@ -88,3 +110,52 @@ def subplotSmooth2D(ax,x,y,Z,fplot='contourf',xmin=None,xmax=None,nx=50,nlev=50,
 
     # plot
     return getattr(ax,fplot)(X,Y,Z_new,levels=levels,**kwargs)
+
+
+#---- 2D joint PDFs
+
+def setFrameIL(ax,xranks,yranks):
+    """Set inverse-logarithmic axes on x and y axes"""
+    
+    ##-- create inverse-log frame
+    # define axes values
+    x = np.flipud(1./(1-xranks/100.))
+    y = np.flipud(1./(1-yranks/100.))
+    Nx = len(x)
+    Ny = len(y)
+    # h = subplotSmooth2D(ax,x,y,Z,fplot='contourf',xmin=ymin,xmax=ymin,nx=50,nlev=50,vmin=None,vmax=None)
+    ax.matshow(np.full((Nx,Ny),np.nan),origin='lower',extent=[x[0],x[-1],y[0],y[-1]])
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    # axes labels and positions
+    ax.xaxis.set_ticks_position('bottom')
+
+    # set xticks
+    xtick_pos = np.mod(np.log10(np.round(x,5)),1) == 0
+    xticks = x[xtick_pos]
+    xticklabels = np.array(xranks[xtick_pos],dtype=str)
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xticklabels)
+
+    # set yticks
+    ytick_pos = np.mod(np.log10(np.round(y,5)),1) == 0
+    yticks = y[ytick_pos]
+    yticklabels = np.array(yranks[ytick_pos],dtype=str)
+    ax.set_yticks(yticks)
+    ax.set_yticklabels(yticklabels)
+
+    return ax
+
+
+def showJointHistogram(ax,values,scale='lin',vmin=1e-3,vmax=1,cmap=None):
+    """Show matrix data as it is, regardless of preset frame and ticks"""
+
+    if scale == 'lin':
+        h = ax.matshow(values,vmin=vmin,vmax=vmax,origin='lower',cmap=cmap)
+    elif scale == 'log':
+        h = ax.matshow(values,norm=LogNorm(vmin=vmin,vmax=vmax),origin='lower',cmap=cmap)
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    return h
