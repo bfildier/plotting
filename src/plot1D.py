@@ -37,7 +37,7 @@ from matplotlib.colors import LogNorm
 
 #-- create inverse-log frame
 
-def setXaxisIL(ax,ranks):
+def setXaxisIL(ax,ranks,xtickrotation=0):
     
     # define axes values
     x = np.flipud(1./(1-ranks/100.))
@@ -57,7 +57,7 @@ def setXaxisIL(ax,ranks):
     ks = np.round(np.log10(xticks),7)
     xticklabels = np.array([("%%2.%1df"%max(0,k-2))%((1-10**(-k))*100) for k in np.flipud(ks)])
     ax.set_xticks(xticks)
-    ax.set_xticklabels(xticklabels)
+    ax.set_xticklabels(xticklabels,rotation=xtickrotation)
     # set labelpad
     # ax.set_xlabel(labelpad=4.0)
     
@@ -83,7 +83,7 @@ def setYaxisIL(ax,ranks):
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels)
 
-def setFrame(ax,rankmin=0,rankmax=99.99,axisIL='x'):
+def setFrame(ax,rankmin=0,rankmax=99.99,axisIL='x',xtickrotation=0):
     
     #- duplicate axes for rescaling frame
     ax_frame = ax.twiny()
@@ -97,7 +97,7 @@ def setFrame(ax,rankmin=0,rankmax=99.99,axisIL='x'):
     
     #- set axis
     if axisIL == 'x':
-        setXaxisIL(ax_frame,ranks_frame)
+        setXaxisIL(ax_frame,ranks_frame,xtickrotation=xtickrotation)
     elif axisIL == 'y':
         setXaxisIL(ax_frame,ranks_frame)
         
@@ -151,7 +151,7 @@ def showData(ax,ranks,values,axisIL='x',rankmin=0,rankmax=99.99,**kwargs):
 
 
 def subplotRanksILog(ax,ranks,y,sl=slice(None,None),rankmin=0,rankmax=99.999,setframe=True,\
-                     col=None,ltype=None,linewidth=None,alpha=None,labels=None,offset=0):
+                     col=None,ltype=None,linewidth=None,alpha=None,labels=None,offset=0,xtickrotation=0):
     """Display one or several curves on inverse=logarithmic axis.
     To allow successive use of this method, set frame based on rankmin and rankmax, duplicate axis for frame, and use
     axes given in argument to display curve"""
@@ -159,7 +159,7 @@ def subplotRanksILog(ax,ranks,y,sl=slice(None,None),rankmin=0,rankmax=99.999,set
     #- set frame
     ax_frame = None
     if setframe:
-        ax_frame = setFrame(ax,rankmin=rankmin,rankmax=rankmax)
+        ax_frame = setFrame(ax,rankmin=rankmin,rankmax=rankmax,xtickrotation=xtickrotation)
         
     #- show data
     # init handle list
@@ -183,7 +183,7 @@ def subplotRanksILog(ax,ranks,y,sl=slice(None,None),rankmin=0,rankmax=99.999,set
 
 
 def addXHatch(ax,ranks,i_xlim,color='gray',hatch='//',
-    alpha=1,fill=False,**kwargs):
+    alpha=1,fill=False,closed=True,**kwargs):
     """Add vertical shading"""
 
     x = 1/(1-ranks/100.)
@@ -192,7 +192,7 @@ def addXHatch(ax,ranks,i_xlim,color='gray',hatch='//',
                           [x[i_xlim[1]], ax.get_ylim()[0]],\
                           [x[i_xlim[1]], ax.get_ylim()[1]],\
                           [x[i_xlim[0]], ax.get_ylim()[1]]],\
-                          closed=True, fill=fill, hatch=hatch,linewidth=0,
+                          closed=closed, fill=fill, hatch=hatch,linewidth=0,
                           color=color,alpha=alpha,**kwargs))
     
 def addYHatch(ax,ranks,i_ylim,color='gray',hatch='//',

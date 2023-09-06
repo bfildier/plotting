@@ -19,6 +19,7 @@ from scipy.interpolate import griddata,interp2d
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
+from matplotlib.colors import LogNorm
 
 # ## Plot vertical data (transect, or vertical profiles over time)
 # def subplotVerticalData(ax,x,y,Z,cmap=plt.cm.seismic,vmin=None,vmax=None,cbar=True):
@@ -63,7 +64,7 @@ from matplotlib import colors
 # set the colormap and centre the colorbar
 class MidpointNormalize(colors.Normalize):
     """
-    Normalise the colorbar so that diverging bars work there way either side from a prescribed midpoint value)
+    Normalise the colorbar so that diverging bars work their way either side from a prescribed midpoint value)
 
     e.g. im=ax1.imshow(array, norm=MidpointNormalize(midpoint=0.,vmin=-100, vmax=100))
     """
@@ -114,7 +115,28 @@ def subplotSmooth2D(ax,x,y,Z,fplot='contourf',xmin=None,xmax=None,nx=50,nlev=50,
 
 #---- 2D joint PDFs
 
-def setFrameIL(ax,xranks,yranks):
+def computeTickLabels(xranks):
+    
+    # nonlinear transformation of ranks
+    x = np.flipud(1./(1-xranks/100.))
+    # linear scale
+    k_all = np.log10(np.round(x,5))
+    # tick positions
+    xtick_pos = np.mod(k_all,1) == 0
+    # positions of ticks on transformed axis
+    xticks = x[xtick_pos]
+    # linear ranks of ticks
+    ks = k_all[xtick_pos]
+    # n_digits in final tick labels
+    ndigits = [int(max(k-2,1)) for k in ks]
+    # labels
+    xlab_floats = np.array(xranks[xtick_pos])
+    # convert labels to strings
+    xticklabels = np.array([('%'+('2.%d'%ndig)+'f')%s for ndig,s in zip(np.flipud(ndigits),xlab_floats)])
+    
+    return xticks, xticklabels
+
+def setFrameIL(ax,xranks,yranks,aspect='1'):
     """Set inverse-logarithmic axes on x and y axes"""
     
     ##-- create inverse-log frame
@@ -124,33 +146,29 @@ def setFrameIL(ax,xranks,yranks):
     Nx = len(x)
     Ny = len(y)
     # h = subplotSmooth2D(ax,x,y,Z,fplot='contourf',xmin=ymin,xmax=ymin,nx=50,nlev=50,vmin=None,vmax=None)
-    ax.matshow(np.full((Nx,Ny),np.nan),origin='lower',extent=[x[0],x[-1],y[0],y[-1]])
+    ax.matshow(np.full((Nx,Ny),np.nan),origin='lower',extent=[x[0],x[-1],y[0],y[-1]],aspect=aspect)
     ax.set_xscale('log')
     ax.set_yscale('log')
     # axes labels and positions
     ax.xaxis.set_ticks_position('bottom')
 
     # set xticks
-    xtick_pos = np.mod(np.log10(np.round(x,5)),1) == 0
-    xticks = x[xtick_pos]
-    xticklabels = np.array(xranks[xtick_pos],dtype=str)
+    xticks, xticklabels = computeTickLabels(xranks)
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels)
 
     # set yticks
-    ytick_pos = np.mod(np.log10(np.round(y,5)),1) == 0
-    yticks = y[ytick_pos]
-    yticklabels = np.array(yranks[ytick_pos],dtype=str)
+    yticks, yticklabels = computeTickLabels(yranks)
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels)
 
     return ax
 
 
-def showJointHistogram(ax,values,scale='lin',vmin=1e-3,vmax=1,cmap=None):
+def showJointHistogram(ax,values,scale='linear',vmin=1e-3,vmax=1,cmap=None):
     """Show matrix data as it is, regardless of preset frame and ticks"""
 
-    if scale == 'lin':
+    if scale == 'linear':
         h = ax.matshow(values,vmin=vmin,vmax=vmax,origin='lower',cmap=cmap)
     elif scale == 'log':
         h = ax.matshow(values,norm=LogNorm(vmin=vmin,vmax=vmax),origin='lower',cmap=cmap)
